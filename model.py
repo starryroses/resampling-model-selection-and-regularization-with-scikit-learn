@@ -107,8 +107,58 @@ def compare_with_loocv(estimator, X, y, ks, seeds):
         'kfold':cv_spread_by_k(estimator,X,y,ks,seeds)
     }
 
-# Step 6 - bootstrap_coefficients (not yet solved)
-# TODO: implement
+# Step 6 - bootstrap_coefficients
+import numpy as np
+from sklearn.linear_model import LinearRegression
+
+import numpy as np
+from sklearn.linear_model import LinearRegression
+
+def bootstrap_coefficients(X, y, n_boot=200, random_state=0):
+    rng = np.random.default_rng(random_state)
+    n = len(X)
+    p = X.shape[1]
+    coefs = np.zeros((n_boot, p))
+    for i in range(n_boot):
+        indices = rng.integers(0, n, n)
+        X_boot = X.iloc[indices]
+        y_boot = y.iloc[indices]
+        model = LinearRegression()
+        model.fit(X_boot, y_boot)
+        coefs[i] = model.coef_
+    return coefs
+
+def bootstrap_se(coefs):
+    std_per_coef = np.std(coefs, axis=0, ddof=1)
+    return std_per_coef
+
+import numpy as np
+
+def ols_standard_errors(X, y):
+    X = np.asarray(X)
+    y = np.asarray(y).ravel()
+
+    n, p = X.shape
+
+    # Add intercept column
+    A = np.column_stack([np.ones(n), X])
+
+    # Fit OLS coefficients
+    beta = np.linalg.lstsq(A, y, rcond=None)[0]
+
+    # Calculate residuals
+    residuals = y - A @ beta
+
+    # Estimate error variance
+    sigma2 = np.sum(residuals**2) / (n - p - 1)
+
+    # Calculate coefficient covariance matrix
+    cov = sigma2 * np.linalg.inv(A.T @ A)
+
+    # Extract standard errors, excluding intercept
+    se = np.sqrt(np.diag(cov))[1:]
+
+    return np.round(se, 2)
 
 # Step 7 - stepwise_path (not yet solved)
 # TODO: implement
