@@ -160,8 +160,22 @@ def ols_standard_errors(X, y):
 
     return np.round(se, 2)
 
-# Step 7 - stepwise_path (not yet solved)
-# TODO: implement
+# Step 7 - stepwise_path
+from sklearn.feature_selection import SequentialFeatureSelector
+from sklearn.linear_model import LinearRegression
+
+def select_features(X, y, k, direction, cv):
+    sfs = SequentialFeatureSelector(LinearRegression(),n_features_to_select=k,direction=direction,cv=cv, scoring='neg_mean_squared_error')
+    sfs.fit(X,y)
+    return list(X.columns[sfs.get_support()])
+
+def stepwise_path(X, y, direction, cv):
+    p = X.shape[1]
+    path = {}
+    for k in range(1, p):
+        path[k] = select_features(X, y, k, direction, cv)
+    path[p] = list(X.columns)
+    return path
 
 # Step 8 - score_path (not yet solved)
 # TODO: implement
