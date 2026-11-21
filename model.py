@@ -165,8 +165,14 @@ from sklearn.feature_selection import SequentialFeatureSelector
 from sklearn.linear_model import LinearRegression
 
 def select_features(X, y, k, direction, cv):
-    sfs = SequentialFeatureSelector(LinearRegression(),n_features_to_select=k,direction=direction,cv=cv, scoring='neg_mean_squared_error')
-    sfs.fit(X,y)
+    sfs = SequentialFeatureSelector(
+        LinearRegression(),
+        n_features_to_select=k,
+        direction=direction,
+        scoring='neg_mean_squared_error',
+        cv=cv,
+    )
+    sfs.fit(X, y)
     return list(X.columns[sfs.get_support()])
 
 def stepwise_path(X, y, direction, cv):
@@ -174,11 +180,28 @@ def stepwise_path(X, y, direction, cv):
     path = {}
     for k in range(1, p):
         path[k] = select_features(X, y, k, direction, cv)
-    path[p] = list(X.columns)
+    path[p] = list(X.columns)   # k = p: nothing to select, use all columns
     return path
 
-# Step 8 - score_path (not yet solved)
-# TODO: implement
+# Step 8 - score_path
+import numpy as np
+from sklearn.linear_model import LinearRegression
+from sklearn.model_selection import cross_val_score
+
+def score_path(X, y, path, cv):
+    sizes, means, ses = [], [], []
+    for k in sorted(path):
+        scores = -cross_val_score(
+            LinearRegression(), X[path[k]], y,
+            cv=cv, scoring='neg_mean_squared_error'
+        )
+        sizes.append(k)
+        means.append(round(np.mean(scores), 1))
+        ses.append(round(np.std(scores, ddof=1) / np.sqrt(len(scores)), 1))
+    return sizes, means, ses
+
+def best_size(sizes, means):
+    return sizes[int(np.argmin(means))]
 
 # Step 9 - one_se_rule (not yet solved)
 # TODO: implement
