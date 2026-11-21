@@ -203,8 +203,24 @@ def score_path(X, y, path, cv):
 def best_size(sizes, means):
     return sizes[int(np.argmin(means))]
 
-# Step 9 - one_se_rule (not yet solved)
-# TODO: implement
+# Step 9 - one_se_rule
+import numpy as np
+
+def one_se_rule(values, means, ses, prefer='smaller'):
+    means = np.asarray(means, dtype=float)
+    ses = np.asarray(ses, dtype=float)
+    i_min = int(np.argmin(means))
+    threshold = means[i_min] + ses[i_min]
+    eligible = [v for v, m in zip(values, means) if m <= threshold]
+    return min(eligible) if prefer == 'smaller' else max(eligible)
+
+def choose_subset(X, y, direction, cv):
+    path = stepwise_path(X, y, direction, cv)
+    sizes, means, ses = score_path(X, y, path, cv)
+    size_min = best_size(sizes, means)
+    size_1se = one_se_rule(sizes, means, ses, prefer='smaller')
+    features_1se = path[size_1se]
+    return size_min, size_1se, features_1se
 
 # Step 10 - ridge_path (not yet solved)
 # TODO: implement
