@@ -241,8 +241,25 @@ def ridge_path(X, y, alphas):
 def coef_norms(path):
     return np.round(np.linalg.norm(path, axis=1), 2)
 
-# Step 11 - cv_curve (not yet solved)
-# TODO: implement
+# Step 11 - cv_curve
+import numpy as np
+from sklearn.model_selection import cross_val_score
+
+def cv_curve(make_model, X, y, values, cv):
+    means = []
+    ses = []
+    for value in values:
+        model = make_model(value)
+        scores = -cross_val_score(model,X,y,cv=cv,scoring='neg_mean_squared_error')        
+        means.append(np.mean(scores))
+        ses.append(np.std(scores)/ np.sqrt(len(scores)))
+    return np.round(means, 1).tolist(), np.round(ses, 1).tolist()
+
+def choose_penalty(make_model, X, y, values, cv):
+    means,ses = cv_curve(make_model,X,y,values,cv)
+    value_min = values[int(np.argmin(means))]
+    value_lse = one_se_rule(values,means,ses,prefer='larger')
+    return value_min,value_lse
 
 # Step 12 - lasso_path (not yet solved)
 # TODO: implement
