@@ -261,8 +261,37 @@ def choose_penalty(make_model, X, y, values, cv):
     value_lse = one_se_rule(values,means,ses,prefer='larger')
     return value_min,value_lse
 
-# Step 12 - lasso_path (not yet solved)
-# TODO: implement
+# Step 12 - lasso_path
+import numpy as np
+from sklearn.linear_model import Lasso, LassoCV
+from sklearn.pipeline import make_pipeline
+from sklearn.preprocessing import StandardScaler
+
+def lasso_model(alpha):
+    return make_pipeline(StandardScaler(), Lasso(alpha=alpha, max_iter=20000))
+
+def lasso_path(X, y, alphas):
+    coef_matrix = []
+    for alpha in alphas:
+        model = lasso_model(alpha)
+        model.fit(X, y)
+        coef_matrix.append(model.named_steps['lasso'].coef_)
+    return np.array(coef_matrix)
+
+def nonzero_features(coef, names, tol=1e-8):
+    return [
+        name for name, c in zip(names, coef)
+        if abs(c) > tol
+    ]
+
+
+def lasso_cv(X, y, cv):
+    model = make_pipeline(StandardScaler(), LassoCV(cv=cv, max_iter=20000, random_state=0))
+    model.fit(X, y)
+    alpha = round(model.named_steps['lassocv'].alpha_, 4)
+    coef = model.named_steps['lassocv'].coef_
+    selected = nonzero_features(coef, X.columns)
+    return alpha, selected
 
 # Step 13 - pcr_model (not yet solved)
 # TODO: implement
