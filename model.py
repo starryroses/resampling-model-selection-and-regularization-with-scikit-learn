@@ -317,8 +317,25 @@ def pcr_curve(X, y, cv):
     means, ses = cv_curve(pcr_model, X, y, components, cv)
     return list(components), means, ses
 
-# Step 14 - pls_model (not yet solved)
-# TODO: implement
+# Step 14 - pls_model
+import numpy as np
+from sklearn.cross_decomposition import PLSRegression
+
+def pls_model(n_components):
+    return PLSRegression(n_components=n_components, scale=True)
+
+def pls_curve(X, y, cv):
+    components = range(1,X.shape[1]+1)
+    means, ses = cv_curve(pls_model,X,y,components,cv)
+    return list(components),means,ses
+
+def pls_predict(model, X):
+    return model.predict(X).ravel()
+
+def best_components(components, means, ses):
+    m_1se = one_se_rule(components, means, ses, prefer='smaller')
+    m_min = components[int(np.argmin(means))]
+    return m_min, m_1se
 
 # Step 15 - fit_all (not yet solved)
 # TODO: implement
