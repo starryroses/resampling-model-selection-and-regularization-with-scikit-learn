@@ -386,6 +386,49 @@ def fit_all(X, y, cv, alphas):
 
     return results
 
-# Step 16 - test_report (not yet solved)
-# TODO: implement
+# Step 16 - test_report
+import numpy as np
+from sklearn.metrics import mean_squared_error
+
+
+def test_report(models, X_test, y_test):
+    report = {}
+
+    for name, (model, features, setting) in models.items():
+        predictions = model.predict(X_test[features]).ravel()
+        rmse = np.sqrt(mean_squared_error(y_test, predictions))
+
+        if name == 'lasso_cv':
+            n = np.sum(model.named_steps['lassocv'].coef_ != 0)
+        elif name == 'forward_1se':
+            n = len(features)
+        else:
+            n = len(features)
+
+        report[name] = {
+            'rmse': round(rmse, 1),
+            'n_features': n,
+            'setting': setting
+        }
+
+    return report
+
+
+def best_method(report):
+    return min(report, key=lambda name: report[name]['rmse'])
+
+
+def format_table(report):
+    rows = []
+
+    for name in sorted(report, key=lambda name: report[name]['rmse']):
+        rmse = report[name]['rmse']
+        n = report[name]['n_features']
+        setting = report[name]['setting']
+
+        rows.append(
+            f"{name:12s} rmse={rmse:6.1f} features={n:2d} setting={setting}"
+        )
+
+    return rows
 
