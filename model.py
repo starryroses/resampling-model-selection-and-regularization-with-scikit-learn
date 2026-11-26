@@ -293,8 +293,29 @@ def lasso_cv(X, y, cv):
     selected = nonzero_features(coef, X.columns)
     return alpha, selected
 
-# Step 13 - pcr_model (not yet solved)
-# TODO: implement
+# Step 13 - pcr_model
+import numpy as np
+from sklearn.decomposition import PCA
+from sklearn.linear_model import LinearRegression
+from sklearn.pipeline import make_pipeline
+from sklearn.preprocessing import StandardScaler
+
+def pcr_model(n_components):
+    return make_pipeline(StandardScaler(), PCA(n_components=n_components), LinearRegression())
+
+def explained_variance(X):
+    scaler = StandardScaler()
+    X_scaled = scaler.fit_transform(X)
+    pca = PCA()
+    pca.fit(X_scaled)
+    variance = pca.explained_variance_ratio_
+    cumulative_variance = np.cumsum(variance)
+    return np.round(cumulative_variance, 3)
+
+def pcr_curve(X, y, cv):
+    components = range(1, X.shape[1] + 1)
+    means, ses = cv_curve(pcr_model, X, y, components, cv)
+    return list(components), means, ses
 
 # Step 14 - pls_model (not yet solved)
 # TODO: implement
