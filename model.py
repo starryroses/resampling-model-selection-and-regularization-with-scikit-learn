@@ -337,8 +337,54 @@ def best_components(components, means, ses):
     m_min = components[int(np.argmin(means))]
     return m_min, m_1se
 
-# Step 15 - fit_all (not yet solved)
-# TODO: implement
+# Step 15 - fit_all
+import numpy as np
+from sklearn.linear_model import LinearRegression, LassoCV
+from sklearn.pipeline import make_pipeline
+from sklearn.preprocessing import StandardScaler
+
+def fit_all(X, y, cv, alphas):
+    results = {}
+    features = list(X.columns)
+
+    # OLS
+    model = LinearRegression()
+    model.fit(X[features], y)
+    results['ols'] = (model, features, None)
+
+    # Forward selection
+    _, size_1se, selected = choose_subset(X, y, 'forward', cv)
+    model = LinearRegression()
+    model.fit(X[selected], y)
+    results['forward_1se'] = (model, selected, size_1se)
+
+    # Ridge
+    _, alpha = choose_penalty(ridge_model, X, y, alphas, cv)
+    model = ridge_model(alpha)
+    model.fit(X[features], y)
+    results['ridge_1se'] = (model, features, alpha)
+
+    # Lasso
+    model = make_pipeline(StandardScaler(), LassoCV(cv=cv))
+    model.fit(X[features], y)
+    alpha = round(model.named_steps['lassocv'].alpha_, 4)
+    results['lasso_cv'] = (model, features, alpha)
+
+    # PCR
+    components, means, ses = pcr_curve(X, y, cv)
+    _, n = best_components(components, means, ses)
+    model = pcr_model(n)
+    model.fit(X[features], y)
+    results['pcr_1se'] = (model, features, n)
+
+    # PLS
+    components, means, ses = pls_curve(X, y, cv)
+    _, n = best_components(components, means, ses)
+    model = pls_model(n)
+    model.fit(X[features], y)
+    results['pls_1se'] = (model, features, n)
+
+    return results
 
 # Step 16 - test_report (not yet solved)
 # TODO: implement
